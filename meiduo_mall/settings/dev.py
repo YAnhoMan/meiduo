@@ -204,11 +204,14 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = 'users.User'
 
-# CORS
+# CORS  追加白名单
 CORS_ORIGIN_WHITELIST = (
     '127.0.0.1:8080',
     'localhost:8080',
     'www.meiduo.site:8080',
     'api.meiduo.site:8000'
 )
-CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
+
+CORS_ALLOW_CREDENTIALS = True  # 跨域时允许携带cookie
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'www.meiduo.site', 'api.meiduo.site']

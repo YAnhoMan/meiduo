@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from meiduo_mall.apps.verifications import constants
-from celery_tasks.sms.yuntongxun.tasks import send_sms_code
+from celery_tasks.sms.tasks import send_sms_code
 
 
 # Create your views here.

@@ -1,7 +1,7 @@
 var vm = new Vue({
     el: '#app',
     data: {
-        host,
+        host:host,
         error_name: false,
         error_password: false,
         error_check_password: false,

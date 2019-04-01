@@ -1,8 +1,5 @@
 from celery import Celery
 
-import os
-
-
 # 1.创建celery实例对象
 celery_app = Celery('meiduo')
 

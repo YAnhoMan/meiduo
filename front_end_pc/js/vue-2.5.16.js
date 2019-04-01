@@ -5707,7 +5707,7 @@ function createPatchFunction (backend) {
         ancestor = ancestor.parent;
       }
     }
-    // for slot content they should also get the scopeId from the host instance.
+    // for slot content they should also get the scopeId from the hosts instance.
     if (isDef(i = activeInstance) &&
       i !== vnode.context &&
       i !== vnode.fnContext &&
