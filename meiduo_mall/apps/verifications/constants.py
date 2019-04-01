@@ -1,0 +1,8 @@
+# 短信验证码保存时间
+SMS_CODE_REDIS_EXPIRES = 300
+
+# 短信模板ID
+SEND_SMS_TEMPLATE_ID = 1
+
+# 短信验证码发送状态保存时间
+SEND_SMS_CODE_INTERVAL = 60
