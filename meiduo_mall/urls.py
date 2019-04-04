@@ -22,4 +22,6 @@ urlpatterns = [
     url(r'^', include('verifications.urls', namespace='SMS')),
 
     url(r'^', include('users.urls', namespace='users')),
+
+    url(r'^oauth/', include('oauth.urls', namespace='oauth')),
 ]
