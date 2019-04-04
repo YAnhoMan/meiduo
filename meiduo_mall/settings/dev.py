@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'users.apps.UsersConfig',
     'corsheaders',  # 跨域解决工具
+    'oauth.apps.OauthConfig'
 ]
 
 MIDDLEWARE = [
