@@ -2,16 +2,19 @@ import logging
 
 from django.shortcuts import render
 
-
 from QQLoginTool.QQtool import OAuthQQ
 # Create your views here.
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, UpdateAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.settings import api_settings
+
 from rest_framework.views import APIView
+from rest_framework_jwt.settings import api_settings
+
 from meiduo_mall.apps.oauth import constants
-from meiduo_mall.apps.oauth.serializers import QQAuthUserSerializer
+from users.models import User
+from .serializers import QQAuthUserSerializer, EmailSerializer
 from .models import OAuthQQUser
 from meiduo_mall.apps.oauth.utils import generate_save_user_token
 
@@ -95,12 +98,11 @@ class QQAuthUserView(GenericAPIView):
                 'username': user.username
             })
 
-
     def post(self, request):
 
         serializer = self.get_serializer(data=request.data)
 
-        serializer.is_valid(raise_exceptione=True)
+        serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
 
@@ -117,5 +119,33 @@ class QQAuthUserView(GenericAPIView):
         })
 
 
+class EmailView(UpdateAPIView):
+    """
+    保存用户邮箱
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = EmailSerializer
+
+    def get_object(self, *args, **kwargs):
+        return self.request.user
 
 
+class VerifyEmailView(APIView):
+    """
+    邮箱验证
+    """
+
+    def get(self, request):
+        # 获取token
+        token = request.query_params.get('token')
+        if not token:
+            return Response({'message': '缺少token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 验证token
+        user = User.check_verify_email_token(token)
+        if user is None:
+            return Response({'message': '链接信息无效'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            user.email_active = True
+            user.save()
+            return Response({'message': 'OK'})
