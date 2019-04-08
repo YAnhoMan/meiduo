@@ -3,7 +3,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 
-@celery_app(name='send_verify_email')
+@celery_app.task(name='send_verify_email')
 def send_verify_email(to_email, verify_url):
     """
 

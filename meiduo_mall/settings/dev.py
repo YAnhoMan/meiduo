@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'users.apps.UsersConfig',
     'corsheaders',  # 跨域解决工具
-    'oauth.apps.OauthConfig'
+    'oauth.apps.OauthConfig',
+    'areas.apps.AreasConfig'
 ]
 
 MIDDLEWARE = [
@@ -237,3 +238,10 @@ EMAIL_HOST_USER = 'yanhoman@163.com'
 EMAIL_HOST_PASSWORD = 'a1234567'
 #收件人看到的发件人
 EMAIL_FROM = 'python<yanhoman@163.com>'
+
+REST_FRAMEWORK_EXTENSIONS = {
+    # 缓存时间
+    'DEFAULT_CACHE_RESPONSE_TIMEOUT': 60 * 60,
+    # 缓存存储
+    'DEFAULT_USE_CACHE': 'default',
+}
