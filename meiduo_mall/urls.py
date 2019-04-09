@@ -24,4 +24,9 @@ urlpatterns = [
     url(r'^', include('users.urls', namespace='users')),
 
     url(r'^oauth/', include('oauth.urls', namespace='oauth')),
-]
+
+    url(r'^', include('areas.urls', namespace='areas')),
+
+    url(r'^ckeditor/', include('ckeditor_uploader.urls')),
+
+    ]

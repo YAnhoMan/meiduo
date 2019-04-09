@@ -3,7 +3,7 @@ from django.shortcuts import render
 # Create your views here.
 from rest_framework import mixins, status
 from rest_framework.decorators import action
-from rest_framework.generics import CreateAPIView, RetrieveAPIView
+from rest_framework.generics import CreateAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,8 +12,9 @@ from rest_framework.viewsets import GenericViewSet
 from users.models import User
 
 from users import constants
-from users.serializers import CreateUserSerializer, UserDetailSerializer
-from areas.serializers import UserAddressSerializer
+from users.serializers import CreateUserSerializer, UserDetailSerializer, UserAddressSerializer, AddressTitleSerializer
+
+from users.serializers import EmailSerializer
 
 
 
@@ -133,13 +134,42 @@ class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericVi
         修改标题
         """
         address = self.get_object()
-        serializer = serializers.AddressTitleSerializer(instance=address, data=request.data)
+        serializer = AddressTitleSerializer(instance=address, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
 
+class EmailView(UpdateAPIView):
+    """
+    保存用户邮箱
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = EmailSerializer
 
+    def get_object(self, *args, **kwargs):
+        return self.request.user
+
+
+class VerifyEmailView(APIView):
+    """
+    邮箱验证
+    """
+
+    def get(self, request):
+        # 获取token
+        token = request.query_params.get('token')
+        if not token:
+            return Response({'message': '缺少token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 验证token
+        user = User.check_verify_email_token(token)
+        if user is None:
+            return Response({'message': '链接信息无效'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            user.email_active = True
+            user.save()
+            return Response({'message': 'OK'})
 
 
 
