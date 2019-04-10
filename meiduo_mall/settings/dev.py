@@ -16,6 +16,7 @@ import sys
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
+# print(BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     'contents.apps.ContentsConfig',
     'ckeditor',  # 富文本编辑器
     'ckeditor_uploader',  # 富文本编辑器上传图片模块
+    'django_crontab',  # 定时任务
 ]
 
 MIDDLEWARE = [
@@ -130,6 +132,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# 缓存方式
 CACHES = {
     "default": {  # 缓存省市区数据
         "BACKEND": "django_redis.cache.RedisCache",
@@ -153,9 +156,14 @@ CACHES = {
         }
     }
 }
+
+# 缓存引擎
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# session的缓存方式
 SESSION_CACHE_ALIAS = "session"
 
+
+# 日志配置
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,  # 是否禁用已经存在的日志器
@@ -197,6 +205,7 @@ LOGGING = {
     }
 }
 
+# rest_framework的相关配置
 REST_FRAMEWORK = {
     # 异常处理
     'EXCEPTION_HANDLER': 'meiduo_mall.utils.exceptions.exception_handler',
@@ -208,6 +217,7 @@ REST_FRAMEWORK = {
     ),
 }
 
+# 用户类指定
 AUTH_USER_MODEL = 'users.User'
 
 # CORS  追加白名单
@@ -222,11 +232,13 @@ CORS_ALLOW_CREDENTIALS = True  # 跨域时允许携带cookie
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'www.meiduo.site', 'api.meiduo.site']
 
+# jwt设置
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
     'JWT_RESPONSE_PAYLOAD_HANDLER': 'users.utils.jwt_response_payload_handler'
 }
 
+# 重写认证用的后台
 AUTHENTICATION_BACKENDS = [
     'users.utils.UsernameMobileAuthBackend',
 ]
@@ -250,7 +262,7 @@ REST_FRAMEWORK_EXTENSIONS = {
     'DEFAULT_USE_CACHE': 'default',
 }
 
-# django文件存储
+# django文件存储指定
 DEFAULT_FILE_STORAGE = 'meiduo_mall.utils.fastdfs.fdfs_storage.FastDFSStorage'
 
 # FastDFS
@@ -266,3 +278,33 @@ CKEDITOR_CONFIGS = {
     },
 }
 CKEDITOR_UPLOAD_PATH = ''  # 上传图片保存路径，使用了FastDFS，所以此处设为''
+
+# 生成的静态html文件保存目录
+GENERATED_STATIC_HTML_FILES_DIR = os.path.join(os.path.dirname(BASE_DIR), 'front_end_pc')
+
+# 模板配置
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+# 定时任务
+CRONJOBS = [
+    # 每5分钟执行一次生成主页静态文件
+    ('*/5 * * * *', 'contents.crons.generate_static_index_html', '>> /Users/yanho/Desktop/meiduo_mall/logs/crontab.log')
+]
+
+# 解决crontab中文问题
+CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'

@@ -5,7 +5,7 @@ from fdfs_client.client import Fdfs_client
 
 
 @deconstructible
-class FaskDFSStorage(Storage):
+class FastDFSStorage(Storage):
     def __init__(self, base_url=None, client_conf=None):
         """
         初始化
