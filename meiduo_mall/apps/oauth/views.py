@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.settings import api_settings
 
+from carts.utils import merge_cart_cookie_to_redis
 from meiduo_mall.apps.oauth import constants
 from users.models import User
 from .serializers import QQAuthUserSerializer
@@ -91,13 +92,17 @@ class QQAuthUserView(GenericAPIView):
             payload = jwt_payload_handler(user)
             token = jwt_encode_handler(payload)
 
-            return Response({
+            response = Response({
                 'token': token,
                 'user_id': user.id,
                 'username': user.username
             })
 
-    def post(self, request):
+            response = merge_cart_cookie_to_redis(request, user, response)
+
+            return response
+
+    def post(self, request, *args, **kwargs):
 
         serializer = self.get_serializer(data=request.data)
 
@@ -111,10 +116,19 @@ class QQAuthUserView(GenericAPIView):
         payload = jwt_payload_handler(user)
         token = jwt_encode_handler(payload)
 
-        return Response({
+        response = Response({
             'token': token,
             'user_id': user.id,
             'username': user.username
         })
+
+        response = merge_cart_cookie_to_redis(request, user, response)
+
+        return response
+
+
+
+
+
 
 

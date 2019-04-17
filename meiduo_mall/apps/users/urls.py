@@ -15,7 +15,8 @@ urlpatterns = [
     url(r'^mobiles/(?P<mobile>1[3-9]\d{9})/count/', MobileCountView.as_view()),
 
     # 用户登录
-    url(r'^authorizations/', obtain_jwt_token),
+    # url(r'^authorizations/', obtain_jwt_token),
+    url(r'^authorizations/$', UserAuthorizeView.as_view()),
 
     # 用户详细信息
     url(r'^user/', UserDetail.as_view()),
@@ -25,6 +26,9 @@ urlpatterns = [
 
     # 验证邮件
     url(r'^emails/verification/$', VerifyEmailView.as_view()),
+
+    # 浏览记录
+    url(r'^browse_histories/$', UserBrowsingHistoryView.as_view()),
 ]
 
 router = routers.DefaultRouter()

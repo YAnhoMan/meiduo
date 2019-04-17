@@ -70,5 +70,7 @@ class QQAuthUserSerializer(serializers.Serializer):
             openid=validated_data['openid'],
             user=user)
 
+        self.context['view'].user = user
+
         return user
 

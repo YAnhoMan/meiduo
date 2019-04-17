@@ -39,5 +39,8 @@ class UsernameMobileAuthBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         user = get_user_by_account(username)
 
-        if user.check_password(password) and self.user_can_authenticate(user):
-            return user
+        if user:
+            if user.check_password(password) and self.user_can_authenticate(user):
+                return user
+        else:
+            return

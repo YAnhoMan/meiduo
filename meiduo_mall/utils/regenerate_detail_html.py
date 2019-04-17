@@ -1,8 +1,14 @@
+#!/usr/bin/env python
+
 """
 功能：手动生成所有SKU的静态detail html文件
 使用方法:
     ./regenerate_detail_html.py
 """
+import sys
+
+sys.path.insert(0, '../')
+
 import os
 
 if not os.getenv('DJANGO_SETTINGS_MODULE'):
@@ -65,6 +71,8 @@ def generate_static_sku_detail_html(sku_id):
     specs = goods.goodsspecification_set.order_by('id')
     # 若当前sku的规格信息不完整，则不再继续
     if len(sku_key) < len(specs):
+        print(sku_key)
+        print(specs)
         return
     for index, spec in enumerate(specs):
         # 复制当前sku的规格键
