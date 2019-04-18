@@ -27,7 +27,7 @@ SECRET_KEY = 'nv=!u@e^+ksg3ub5aj+#)t1=eq&#e^hsi64b(my#gpv%!ji!1%'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'www.meiduo.site', 'api.meiduo.site']
 
 # Application definition
 
@@ -70,10 +70,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'meiduo_mall.urls'
 
+# 模板配置
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -105,7 +107,7 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': 8306,
         'USER': 'root',
-        'PASSWORD': 'meiduo',
+        'PASSWORD': 'mysql',
         'NAME': 'meiduo_mall'
     }
 }
@@ -261,9 +263,6 @@ CORS_ORIGIN_WHITELIST =  (
     'www.meiduo.site',  # 添加
 )
 
-CORS_ALLOW_CREDENTIALS = True  # 跨域时允许携带cookie
-
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'www.meiduo.site', 'api.meiduo.site']
 
 # jwt设置
 JWT_AUTH = {
@@ -315,23 +314,7 @@ CKEDITOR_UPLOAD_PATH = ''  # 上传图片保存路径，使用了FastDFS，所�
 # 生成的静态html文件保存目录
 GENERATED_STATIC_HTML_FILES_DIR = os.path.join(os.path.dirname(BASE_DIR), 'front_end_pc')
 
-# 模板配置
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
 
 # 定时任务
 CRONJOBS = [

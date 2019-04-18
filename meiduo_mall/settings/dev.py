@@ -100,17 +100,17 @@ DATABASES = {
         'PASSWORD': 'meiduo',  # 数据库用户密码
         'NAME': 'meiduo_mall'  # 数据库名字
     },
-    'slave': {
-            'ENGINE': 'django.db.backends.mysql',
-            'HOST': '127.0.0.1',
-            'PORT': 8306,
-            'USER': 'root',
-            'PASSWORD': 'meiduo',
-            'NAME': 'meiduo_mall'
-    }
+    # 'slave': {
+    #         'ENGINE': 'django.db.backends.mysql',
+    #         'HOST': '127.0.0.1',
+    #         'PORT': 8306,
+    #         'USER': 'root',
+    #         'PASSWORD': 'meiduo',
+    #         'NAME': 'meiduo_mall'
+    # }
 }
 # 配置读写分离
-DATABASE_ROUTERS = ['meiduo_mall.utils.db_router.MasterSlaveDBRouter']
+# DATABASE_ROUTERS = ['meiduo_mall.utils.db_router.MasterSlaveDBRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
