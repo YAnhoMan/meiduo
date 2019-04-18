@@ -364,5 +364,6 @@ HAYSTACK_CONNECTIONS = {
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 
 # 配置静态文件
-STATIC_ROOT = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'front_end_pc/static')
+STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'front_end_pc/static')
+
 
