@@ -99,8 +99,18 @@ DATABASES = {
         'USER': 'meiduo',  # 数据库用户名
         'PASSWORD': 'meiduo',  # 数据库用户密码
         'NAME': 'meiduo_mall'  # 数据库名字
+    },
+    'slave': {
+            'ENGINE': 'django.db.backends.mysql',
+            'HOST': '127.0.0.1',
+            'PORT': 8306,
+            'USER': 'root',
+            'PASSWORD': 'meiduo',
+            'NAME': 'meiduo_mall'
     }
 }
+# 配置读写分离
+DATABASE_ROUTERS = ['meiduo_mall.utils.db_router.MasterSlaveDBRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -352,3 +362,7 @@ HAYSTACK_CONNECTIONS = {
 
 # 当添加、修改、删除数据时，自动生成索引
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
+
+# 配置静态文件
+STATIC_ROOT = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'front_end_pc/static')
+
