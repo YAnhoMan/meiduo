@@ -101,12 +101,12 @@ DATABASES = {
         'NAME': 'meiduo_mall'  # 数据库名字
     },
     'slave': {
-            'ENGINE': 'django.db.backends.mysql',
-            'HOST': '127.0.0.1',
-            'PORT': 8306,
-            'USER': 'root',
-            'PASSWORD': 'meiduo',
-            'NAME': 'meiduo_mall'
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST': '127.0.0.1',
+        'PORT': 8306,
+        'USER': 'root',
+        'PASSWORD': 'meiduo',
+        'NAME': 'meiduo_mall'
     }
 }
 # 配置读写分离
@@ -336,7 +336,7 @@ TEMPLATES = [
 # 定时任务
 CRONJOBS = [
     # 每5分钟执行一次生成主页静态文件
-    ('*/5 * * * *', 'contents.crons.generate_static_index_html', '>> /Users/yanho/Desktop/meiduo_mall/logs/crontab.log')
+    ('*/5 * * * *', 'contents.crons.generate_static_index_html', '>> /root/meiduo/logs/crontab.log')
 ]
 
 # 解决crontab中文问题
@@ -356,7 +356,7 @@ ALIPAY_DEBUG = True
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
-        'URL': 'http://192.168.62.134:9200/',  # 此处为elasticsearch运行的服务器ip地址，端口号固定为9200
+        'URL': 'http://127.0.0.1:9200/',  # 此处为elasticsearch运行的服务器ip地址，端口号固定为9200
         'INDEX_NAME': 'meiduo',  # 指定elasticsearch建立的索引库的名称
     },
 }
