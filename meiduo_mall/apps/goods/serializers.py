@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from goods.models import GoodsChannel, GoodsCategory, SKU
 from goods.search_indexes import SKUIndex
+from orders.models import OrderGoods, OrderInfo
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -44,3 +45,21 @@ class SKUIndexSerializer(HaystackSerializer):
     class Meta:
         index_classes = [SKUIndex]
         fields = ('text', 'object')
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """
+    SKU评论数据序列化器
+    """
+
+    username = serializers.SerializerMethodField(label='用户名')
+
+    def get_username(self, obj):
+        username = OrderInfo.objects.get(order_id=obj.order_id).user.username
+        if obj.is_anonymous:
+            username = username[0] + r'***' + username[-1]
+        return username
+
+    class Meta:
+        model = OrderGoods
+        fields = ('username', 'score', 'comment')

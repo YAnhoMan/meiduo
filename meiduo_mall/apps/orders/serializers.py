@@ -6,6 +6,7 @@ from django_redis import get_redis_connection
 from rest_framework import serializers
 
 from goods.models import SKU
+from goods.serializers import SKUSerializer
 from meiduo_mall.utils.exceptions import logger
 from orders.models import OrderInfo, OrderGoods
 
@@ -165,3 +166,38 @@ class SaveOrderSerializer(serializers.ModelSerializer):
             pl.srem('cart_selected_%s' % user.id, *cart_selected)
             pl.execute()
             return order
+
+
+class JudgeSKUSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SKU
+        fields = ['id', 'name', 'default_image_url']
+
+
+class UnJudgeSerializer(serializers.ModelSerializer):
+    """
+    未评论订单商品序列化器
+    """
+    sku = JudgeSKUSerializer(read_only=True)
+
+    class Meta:
+        model = OrderGoods
+        fields = ('price', 'sku')
+
+
+class JudgeSerializer(serializers.ModelSerializer):
+    """
+    评论订单商品序列号器
+    """
+
+    class Meta:
+        model = OrderGoods
+        fields = ('sku', 'order', 'comment', 'score', 'is_anonymous')
+        extra_kwargs = {
+            'comment': {
+                'min_length': 5,
+                'error_messages': {
+                    'min_length': '仅至少大于5个字符',
+                }
+            },
+        }

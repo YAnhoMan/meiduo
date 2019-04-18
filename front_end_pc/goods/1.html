@@ -58,22 +58,22 @@
 
             <ul class="cart_goods_show">
                 <li>
-                    <img src="/images/goods/goods001.jpg" alt="商品图片">
+                    <img src="images/goods/goods001.jpg" alt="商品图片">
                     <h4>商品名称手机</h4>
                     <div>4</div>
                 </li>
                 <li>
-                    <img src="/images/goods/goods002.jpg" alt="商品图片">
+                    <img src="images/goods/goods002.jpg" alt="商品图片">
                     <h4>商品名称手机</h4>
                     <div>5</div>
                 </li>
                 <li>
-                    <img src="/images/goods/goods003.jpg" alt="商品图片">
+                    <img src="images/goods/goods003.jpg" alt="商品图片">
                     <h4>商品名称手机</h4>
                     <div>6</div>
                 </li>
                 <li>
-                    <img src="/images/goods/goods003.jpg" alt="商品图片">
+                    <img src="images/goods/goods003.jpg" alt="商品图片">
                     <h4>商品名称手机</h4>
                     <div>6</div>
                 </li>
@@ -1741,22 +1741,17 @@
 
     <div class="main_wrap clearfix">
         <div class="l_wrap fl clearfix">
-			<div class="new_goods">
-				<h3>热销排行</h3>
-				<ul>
-					<li>
-						<a href="#"><img src="/images/goods/goods001.jpg"></a>
-						<h4><a href="#">360手机 N6 Pro 全网通 6GB+128GB 极夜黑</a></h4>
-						<div class="prize">￥3.90</div>
-					</li>
-					<li>
-						<a href="#"><img src="/images/goods/goods002.jpg"></a>
-						<h4><a href="#">360手机 N6 Pro 全网通 6GB+128GB 极夜黑</a></h4>
-						<div class="prize">￥16.80</div>
-					</li>
-				</ul>
-			</div>
-		</div>
+            <div class="new_goods">
+                <h3>热销排行</h3>
+                <ul>
+                    <li v-for="sku in hots">
+                        <a :href="sku.url"><img :src="sku.default_image_url"></a>
+                        <h4><a :href="sku.url">[[sku.name]]</a></h4>
+                        <div class="prize">￥[[sku.price]]</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
 
         <div class="r_wrap fr clearfix">
             <ul class="detail_tab clearfix">
@@ -1831,9 +1826,6 @@
 注：因厂家会在没有任何提前通知的情况下更改产品包装、产地或者一些附件，本司不能确保客户收到的货物与商城图片、产地、附件说明完全一致。只能确保为原厂正货！并且保证与当时市场上同样主流新品一致。若本商城没有及时更新，请大家谅解！</p></dd>
                 </dl>
             </div>
-
-
-
         </div>
     </div>
 

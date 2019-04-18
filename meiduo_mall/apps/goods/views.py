@@ -7,7 +7,9 @@ from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
 
 from goods.models import SKU, GoodsCategory
-from goods.serializers import ChannelSerializer, CategorySerializer, SKUSerializer, SKUIndexSerializer
+from goods.serializers import ChannelSerializer, CategorySerializer, SKUSerializer, SKUIndexSerializer, \
+    CommentSerializer
+from orders.models import OrderGoods
 
 
 class CategoryView(GenericAPIView):
@@ -60,3 +62,18 @@ class SKUSearchViewSet(HaystackViewSet):
     index_models = [SKU]
 
     serializer_class = SKUIndexSerializer
+
+
+class CommentView(ListAPIView):
+    """
+    获取商品评论
+    """
+
+    serializer_class = CommentSerializer
+    pagination_class = None
+    filter_backends = (OrderingFilter,)
+    ordering_fields = ('update_time',)
+
+    def get_queryset(self):
+        sku_id = self.kwargs.get('sku_id')
+        return OrderGoods.objects.filter(sku_id=sku_id, is_commented=True)
