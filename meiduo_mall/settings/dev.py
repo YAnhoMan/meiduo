@@ -27,7 +27,6 @@ SECRET_KEY = 'nv=!u@e^+ksg3ub5aj+#)t1=eq&#e^hsi64b(my#gpv%!ji!1%'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -69,22 +68,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'meiduo_mall.urls'
-
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
 
 WSGI_APPLICATION = 'meiduo_mall.wsgi.application'
 
@@ -259,8 +242,6 @@ CORS_ORIGIN_WHITELIST = (
     'www.meiduo.site:8080',
     'api.meiduo.site:8000'
 )
-
-CORS_ALLOW_CREDENTIALS = True  # 跨域时允许携带cookie
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'www.meiduo.site', 'api.meiduo.site']
 
