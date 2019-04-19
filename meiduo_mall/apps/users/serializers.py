@@ -235,3 +235,5 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError('新密码两次输入不一致')
         return attrs
+
+

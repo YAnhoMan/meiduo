@@ -18,7 +18,7 @@ from users.models import User
 
 from users import constants
 from users.serializers import CreateUserSerializer, UserDetailSerializer, UserAddressSerializer, AddressTitleSerializer, \
-    AddUserBrowsingHistorySerializer,ResetPasswordSerializer
+    AddUserBrowsingHistorySerializer, ResetPasswordSerializer
 
 from users.serializers import EmailSerializer
 
@@ -221,7 +221,8 @@ class UserAuthorizeView(ObtainJSONWebToken):
 
 
 class ResetPassword(APIView):
-    """修改密码  """""
+
+    permission_classes = [IsAuthenticated]
 
     def put(self, request, user_id):
         try:
@@ -229,23 +230,15 @@ class ResetPassword(APIView):
         except:
             return Response({'message': '用户不存在'}, status=status.HTTP_400_BAD_REQUEST)
         data_dict = request.data
-
-        print(data_dict)
-        # {'old_password': '496736yl', 'password': '11111111', 'password2': '11111111'}
-
         serializer = ResetPasswordSerializer(data=data_dict)
         serializer.is_valid(raise_exception=True)
         # 1.对输入的旧密码进行判断
-        # print('旧密码　１　%s'%user.password)
-        # print('旧密码　２　%s' %data_dict.get('old_password'))
         old_password = data_dict.get('old_password')
-        # print("old%s"%old_password)
         if not user.check_password(old_password):
             return Response({'message': '当前密码输入错误哦'}, status=status.HTTP_400_BAD_REQUEST)
 
         # 2.修改密码
         new_password = data_dict.get('password')
-        print(new_password)
         user.set_password(new_password)
         user.save()
 
