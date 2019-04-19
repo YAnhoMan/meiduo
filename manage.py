@@ -20,3 +20,5 @@ if __name__ == "__main__":
             )
         raise
     execute_from_command_line(sys.argv)
+
+User.objects.create_superuser('admin','297376986@qq.com','A123456az',mobile=13800138000)
