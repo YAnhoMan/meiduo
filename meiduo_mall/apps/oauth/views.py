@@ -3,8 +3,8 @@ import logging
 from django.shortcuts import render
 
 from QQLoginTool.QQtool import OAuthQQ
-from sinaweibo.snspy import APIClient, SinaWeiboMixin
 # Create your views here.
+from django_redis import get_redis_connection
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -14,10 +14,12 @@ from rest_framework_jwt.settings import api_settings
 
 from carts.utils import merge_cart_cookie_to_redis
 from meiduo_mall.apps.oauth import constants
+from meiduo_mall.utils.captcha.captcha import captcha
 from users.models import User
-from .serializers import QQAuthUserSerializer
+from .serializers import QQAuthUserSerializer, WeiboSerializer
 from .models import OAuthQQUser, OAuthSinaUser
 from meiduo_mall.apps.oauth.utils import generate_save_user_token, generate_save_weibo_token
+from .utils import OAuthweibo
 
 logger = logging.getLogger('Django')
 
@@ -135,7 +137,7 @@ class SINAAuthURLView(APIView):
 
         next = request.query_params.get('next', "/")
 
-        client = OAuthQQ(
+        client = OAuthweibo(
             client_id=constants.APP_KEY,
             client_secret=constants.APP_SECRET,
             redirect_uri=constants.CALLBACK_URL,
@@ -143,15 +145,14 @@ class SINAAuthURLView(APIView):
         )
         weibo_url = client.get_weibo_url()
 
-        return Response({'weibo_url': weibo_url})
-
+        return Response({'login_url': weibo_url})
 
 class SINAAuthUserView(GenericAPIView):
     """
-    QQ登录成功后的回调处理
+    微博登录成功后的回调处理
     """
 
-    serializer_class = QQAuthUserSerializer
+    serializer_class = WeiboSerializer
 
     def get(self, request):
         # 获取前端传入的Code
@@ -161,7 +162,7 @@ class SINAAuthUserView(GenericAPIView):
             return Response({'message': '缺少code'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        client = OAuthQQ(
+        client = OAuthweibo(
             client_id=constants.APP_KEY,
             client_secret=constants.APP_SECRET,
             redirect_uri=constants.CALLBACK_URL,
@@ -170,8 +171,6 @@ class SINAAuthUserView(GenericAPIView):
         try:
 
             access_token = client.get_weibo_access_token(code)
-            access_token = access_token["access_token"]
-            # openid = client.get_open_id(access_token)
 
         except Exception as e:
             logger.info(e)
@@ -230,6 +229,8 @@ class SINAAuthUserView(GenericAPIView):
         response = merge_cart_cookie_to_redis(request, user, response)
 
         return response
+
+
 
 
 

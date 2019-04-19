@@ -93,6 +93,19 @@ var vm = new Vue({
                 .catch(error => {
                     console.log(error.response.data);
                 })
+        },
+        //微博登录
+        sina_login: function(){
+            var next = this.get_query_string('next') || '/';
+            axios.get(this.host + '/oauth/weibo/authorization/?next=' + next, {
+                    responseType: 'json'
+                })
+                .then(response => {
+                    location.href = response.data.login_url;
+                })
+                .catch(error => {
+                    console.log(error.response.data);
+                })
         }
     }
 });

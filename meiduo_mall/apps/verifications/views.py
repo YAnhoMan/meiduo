@@ -1,6 +1,7 @@
 import logging
 import random
 
+from django.http import HttpResponse
 from django_redis import get_redis_connection
 from rest_framework import status
 from rest_framework.response import Response
@@ -9,10 +10,11 @@ from rest_framework.views import APIView
 from meiduo_mall.apps.verifications import constants
 from celery_tasks.sms.tasks import send_sms_code
 
-
 # Create your views here.
+from meiduo_mall.utils.captcha.captcha import captcha
 
 logger = logging.getLogger('Django')
+
 
 class SMSCodeView(APIView):
 
@@ -29,8 +31,28 @@ class SMSCodeView(APIView):
         #  60秒内不允许重发发送短信
         send_flag = redis_conn.get('send_flag_%s' % mobile)
 
+        # 图片验证码验证
+        image_code = request.query_params.get('text')
+        image_code_id = request.query_params.get('image_code_id')
+
+        if image_code_id:
+
+            real_image_code = redis_conn.get("ImageCode_" + image_code_id)
+
+            if real_image_code:
+                # 如果能够取出来值，删除redis中缓存的内容
+                real_image_code = real_image_code.decode()
+                redis_conn.delete("ImageCode_" + image_code_id)
+            else:
+                raise Response(status=status.HTTP_400_BAD_REQUEST)
+
+            if image_code.lower() != real_image_code.lower():
+                # 验证码输入错误
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
         if send_flag:
             return Response({'message': '发送短信太过频繁'}, status=status.HTTP_400_BAD_REQUEST)
+
 
         # 生成短信验证码
         sms_code = '%06d' % random.randint(0, 999999)
@@ -45,3 +67,20 @@ class SMSCodeView(APIView):
         send_sms_code.delay(mobile, sms_code)
 
         return Response({'message': 'OK'})
+
+
+class ImageCodeView(APIView):
+
+    def get(self, request, code_id):
+        name, text, image = captcha.generate_captcha()
+
+        redis_conn = get_redis_connection('verify_codes')
+
+        redis_conn.setex('ImageCode_' + code_id, 20, text)
+
+        # 返回响应内容
+        resp = HttpResponse(image, content_type='image/jpg')
+        # 设置内容类型
+        return resp
+
+
