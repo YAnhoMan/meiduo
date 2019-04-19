@@ -29,6 +29,9 @@ urlpatterns = [
 
     # 浏览记录
     url(r'^browse_histories/$', UserBrowsingHistoryView.as_view()),
+
+    # 用户修改密码接口
+    url(r'^users/(?P<user_id>\w+)/password/$', ResetPassword.as_view())
 ]
 
 router = routers.DefaultRouter()

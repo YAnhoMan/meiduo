@@ -209,3 +209,29 @@ class AddUserBrowsingHistorySerializer(serializers.Serializer):
         pl.execute()
 
         return validated_data
+
+
+class ResetPasswordSerializer(serializers.ModelSerializer):
+    old_password = serializers.CharField(label='确认密码', write_only=True)
+    password2 = serializers.CharField(label='确认密码', write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'old_password', 'password', 'password2']
+
+        extra_kwargs = {
+            'password': {
+                'write_only': True,
+                'min_length': 8,
+                'max_length': 20,
+                'error_messages': {
+                    'min_length': '仅允许8-20个字符的密码',
+                    'max_length': '仅允许8-20个字符的密码',
+                }
+            }
+        }
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError('新密码两次输入不一致')
+        return attrs

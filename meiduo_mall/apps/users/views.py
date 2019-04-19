@@ -18,10 +18,9 @@ from users.models import User
 
 from users import constants
 from users.serializers import CreateUserSerializer, UserDetailSerializer, UserAddressSerializer, AddressTitleSerializer, \
-    AddUserBrowsingHistorySerializer
+    AddUserBrowsingHistorySerializer,ResetPasswordSerializer
 
 from users.serializers import EmailSerializer
-
 
 
 class UserView(CreateAPIView):
@@ -34,8 +33,8 @@ class UserView(CreateAPIView):
 
 class UsernameCountView(APIView):
     """用户名数量"""
-    def get(self, request, username):
 
+    def get(self, request, username):
         count = User.objects.filter(username=username).count()
 
         data = {
@@ -48,8 +47,8 @@ class UsernameCountView(APIView):
 
 class MobileCountView(APIView):
     """手机号数量"""
-    def get(self, request, mobile):
 
+    def get(self, request, mobile):
         count = User.objects.filter(mobile=mobile).count()
 
         data = {
@@ -192,7 +191,7 @@ class UserBrowsingHistoryView(CreateAPIView):
         user_id = request.user.id
 
         redis_conn = get_redis_connection("history")
-        history = redis_conn.lrange("history_%s" % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT-1)
+        history = redis_conn.lrange("history_%s" % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT - 1)
         skus = []
         # 为了保持查询出的顺序与用户的浏览历史保存顺序一致
         for sku_id in history:
@@ -207,6 +206,7 @@ class UserAuthorizeView(ObtainJSONWebToken):
     """
     用户认证
     """
+
     def post(self, request, *args, **kwargs):
         # 调用父类的方法，获取drf jwt扩展默认的认证用户处理结果
         response = super().post(request, *args, **kwargs)
@@ -220,5 +220,34 @@ class UserAuthorizeView(ObtainJSONWebToken):
         return response
 
 
+class ResetPassword(APIView):
+    """修改密码  """""
 
+    def put(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except:
+            return Response({'message': '用户不存在'}, status=status.HTTP_400_BAD_REQUEST)
+        data_dict = request.data
 
+        print(data_dict)
+        # {'old_password': '496736yl', 'password': '11111111', 'password2': '11111111'}
+
+        serializer = ResetPasswordSerializer(data=data_dict)
+        serializer.is_valid(raise_exception=True)
+        # 1.对输入的旧密码进行判断
+        # print('旧密码　１　%s'%user.password)
+        # print('旧密码　２　%s' %data_dict.get('old_password'))
+        old_password = data_dict.get('old_password')
+        # print("old%s"%old_password)
+        if not user.check_password(old_password):
+            return Response({'message': '当前密码输入错误哦'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2.修改密码
+        new_password = data_dict.get('password')
+        print(new_password)
+        user.set_password(new_password)
+        user.save()
+
+        # 响应
+        return Response({'message': 'ok'}, status=status.HTTP_200_OK)
