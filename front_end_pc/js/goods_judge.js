@@ -83,6 +83,10 @@ var vm = new Vue({
                     })
                     .then(response => {
                         this.skus.splice(index, 1);
+                        if (this.skus.length===0){
+                            window.location.href="/user_center_order.html"
+                        }
+
                     })
                     .catch(error => {
                         console.log(error.response.data);

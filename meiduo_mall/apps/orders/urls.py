@@ -5,7 +5,7 @@ from .views import *
 
 urlpatterns = [
 
-    url(r'^orders/$', SaveOrderView.as_view()),
+    url(r'^orders/$', OrderView.as_view({'post': 'create', 'get': 'list'})),
 
     url(r'^orders/settlement/$', OrderSettlementView.as_view()),
 

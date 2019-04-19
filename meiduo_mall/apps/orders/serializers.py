@@ -201,3 +201,27 @@ class JudgeSerializer(serializers.ModelSerializer):
                 }
             },
         }
+
+
+class OrderGoodsSerializer(serializers.ModelSerializer):
+    """
+    订单商品序列号器
+    """
+    sku = JudgeSKUSerializer()
+
+    class Meta:
+        model = OrderGoods
+        fields = ('sku', 'count', 'price')
+
+
+class OrdersSerializer(serializers.ModelSerializer):
+    """
+    订单列表序列号器
+    """
+
+    skus = OrderGoodsSerializer(many=True)
+    create_time = serializers.TimeField()
+
+    class Meta:
+        model = OrderInfo
+        fields = ('order_id', 'total_amount', 'pay_method', 'status', 'skus', 'freight', 'create_time')

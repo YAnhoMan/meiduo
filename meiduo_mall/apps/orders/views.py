@@ -5,16 +5,19 @@ from django.shortcuts import render
 # Create your views here.
 from django_redis import get_redis_connection
 from rest_framework import status
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import ViewSet, GenericViewSet
+from rest_framework import mixins
+
 
 from goods.models import SKU
 from orders.models import OrderGoods, OrderInfo
-from orders.serializers import OrderSettlementSerializer, SaveOrderSerializer, UnJudgeSerializer, JudgeSerializer
+from orders.serializers import OrderSettlementSerializer, SaveOrderSerializer, UnJudgeSerializer, JudgeSerializer, \
+    OrdersSerializer
 
 
 class OrderSettlementView(APIView):
@@ -50,12 +53,21 @@ class OrderSettlementView(APIView):
         return Response(serializer.data)
 
 
-class SaveOrderView(CreateAPIView):
+class OrderView(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):
     """
     保存订单
     """
     permission_classes = [IsAuthenticated]
-    serializer_class = SaveOrderSerializer
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return SaveOrderSerializer
+        else:
+            return OrdersSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return OrderInfo.objects.filter(user=user).order_by('create_time')
 
 
 class OrderJudgeViewSet(ViewSet):
@@ -78,11 +90,14 @@ class OrderJudgeViewSet(ViewSet):
         serializer = JudgeSerializer(instance=object, data=data)
         serializer.is_valid(raise_exception=True)
         object.is_commented = True
+        serializer.save()
 
         unjudge = OrderGoods.objects.filter(order=pk, is_commented=False).count()
         if unjudge == 0:
             order = OrderInfo.objects.get(order_id=pk)
             order.status = 5
             order.save()
-        serializer.save()
+
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
