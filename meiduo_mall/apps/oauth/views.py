@@ -3,6 +3,7 @@ import logging
 from django.shortcuts import render
 
 from QQLoginTool.QQtool import OAuthQQ
+from sinaweibo.snspy import APIClient, SinaWeiboMixin
 # Create your views here.
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -15,8 +16,8 @@ from carts.utils import merge_cart_cookie_to_redis
 from meiduo_mall.apps.oauth import constants
 from users.models import User
 from .serializers import QQAuthUserSerializer
-from .models import OAuthQQUser
-from meiduo_mall.apps.oauth.utils import generate_save_user_token
+from .models import OAuthQQUser, OAuthSinaUser
+from meiduo_mall.apps.oauth.utils import generate_save_user_token, generate_save_weibo_token
 
 logger = logging.getLogger('Django')
 
@@ -125,6 +126,117 @@ class QQAuthUserView(GenericAPIView):
         response = merge_cart_cookie_to_redis(request, user, response)
 
         return response
+
+
+class SINAAuthURLView(APIView):
+    """提供微博登录页面的url"""
+
+    def get(self, request):
+
+        next = request.query_params.get('next', "/")
+
+        client = OAuthQQ(
+            client_id=constants.APP_KEY,
+            client_secret=constants.APP_SECRET,
+            redirect_uri=constants.CALLBACK_URL,
+            state=next
+        )
+        weibo_url = client.get_weibo_url()
+
+        return Response({'weibo_url': weibo_url})
+
+
+class SINAAuthUserView(GenericAPIView):
+    """
+    QQ登录成功后的回调处理
+    """
+
+    serializer_class = QQAuthUserSerializer
+
+    def get(self, request):
+        # 获取前端传入的Code
+        code = request.query_params.get('code')
+
+        if not code:
+            return Response({'message': '缺少code'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        client = OAuthQQ(
+            client_id=constants.APP_KEY,
+            client_secret=constants.APP_SECRET,
+            redirect_uri=constants.CALLBACK_URL,
+            state=next)
+
+        try:
+
+            access_token = client.get_weibo_access_token(code)
+            access_token = access_token["access_token"]
+            # openid = client.get_open_id(access_token)
+
+        except Exception as e:
+            logger.info(e)
+            return Response({'message': '微博服务错误'},
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        try:
+            oauthSINAUserModel = OAuthSinaUser.objects.get(access_token=access_token)
+
+        except OAuthSinaUser.DoesNotExist:
+
+            token = generate_save_weibo_token(access_token)
+
+            return Response({
+                'access_token': token
+            })
+
+        else:
+            jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+            jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+            # 获取oauth_user关联的user
+            user = oauthSINAUserModel.user
+            payload = jwt_payload_handler(user)
+            token = jwt_encode_handler(payload)
+
+            response = Response({
+                'token': token,
+                'user_id': user.id,
+                'username': user.username
+            })
+
+            response = merge_cart_cookie_to_redis(request, user, response)
+
+            return response
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.save()
+
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+        payload = jwt_payload_handler(user)
+        token = jwt_encode_handler(payload)
+
+        response = Response({
+            'token': token,
+            'user_id': user.id,
+            'username': user.username
+        })
+
+        response = merge_cart_cookie_to_redis(request, user, response)
+
+        return response
+
+
+
+
+
+
+
 
 
 

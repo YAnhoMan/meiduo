@@ -12,6 +12,14 @@ def generate_save_user_token(openid):
     return token.decode()
 
 
+def generate_save_weibo_token(access_token):
+    serializer = Serializer(SECRET_KEY, 300)
+
+    token = serializer.dumps({'access_token': access_token})
+
+    return token.decode()
+
+
 def check_save_user_token(access_token):
 
     serializer = Serializer(SECRET_KEY, 300)
@@ -24,4 +32,7 @@ def check_save_user_token(access_token):
 
     else:
         return data.get('openid')
+
+
+
 
