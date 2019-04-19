@@ -63,7 +63,7 @@ class OrderJudgeViewSet(ViewSet):
     获取未评论商品及评论商品
     """
 
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     @action(methods=['get'], detail=True)
     def uncommentgoods(self, request, pk=None):
