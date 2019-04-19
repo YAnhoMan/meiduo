@@ -69,18 +69,16 @@ class SMSCodeView(APIView):
         return Response({'message': 'OK'})
 
 
-class ImageCodeView(APIView):
+class ImageCode(APIView):
+    """获取图片验证码"""
+    def get(self,request,image_code_id):
+        name,text,image = captcha.generate_captcha()
+        redis_conn = get_redis_connection("verify_codes")
+        try:
+            redis_conn.setex("image_code_%s" % image_code_id, 300 , text.lower())
+        except Exception:
+            return Response({"message":"图片验证码储存出错"})
 
-    def get(self, request, code_id):
-        name, text, image = captcha.generate_captcha()
-
-        redis_conn = get_redis_connection('verify_codes')
-
-        redis_conn.setex('ImageCode_' + code_id, 20, text)
-
-        # 返回响应内容
-        resp = HttpResponse(image, content_type='image/jpg')
-        # 设置内容类型
-        return resp
+        return HttpResponse(image, content_type='img/png')
 
 

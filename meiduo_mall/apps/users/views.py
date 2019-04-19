@@ -231,8 +231,6 @@ class UserAuthorizeView(ObtainJSONWebToken):
 
 class ResetPassword(APIView):
 
-    permission_classes = [IsAuthenticated]
-
     def put(self, request, user_id):
         try:
             user = User.objects.get(id=user_id)
@@ -254,18 +252,19 @@ class ResetPassword(APIView):
         # 响应
         return Response({'message': 'ok'}, status=status.HTTP_200_OK)
 
-
-class ImageCode(APIView):
-    """获取图片验证码"""
-    def get(self,request,image_code_id):
-        name,text,image = captcha.generate_captcha()
+    def post(self,request, user_id):
         redis_conn = get_redis_connection("verify_codes")
-        try:
-            redis_conn.setex("image_code_%s" % image_code_id, 300 , text.lower())
-        except Exception:
-            return Response({"message":"图片验证码储存出错"})
+        data = request.data
+        user = User.objects.get(id = user_id)
+        access_token = redis_conn.get("access_token_%s" % user.mobile)
+        user_id = check_save_user_access_token(access_token)
+        if user_id != user.id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        return HttpResponse(image, content_type='img/png')
+        serializer= NewPasswordSerializer(instance=user,data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class UserGetMobile(APIView):
@@ -298,21 +297,6 @@ class UserGetMobile(APIView):
         return Response(data=data)
 
 
-class SmSCode(APIView):
-    # 发送短信验证码
-    def get(self,request):
-        data = request.query_params
-        access_token = data.get("access_token")
-        user_id = check_save_user_access_token(access_token)
-        redis_conn = get_redis_connection("verify_codes")
-        mobile = redis_conn.get("mobile_%s" % user_id).decode()
-        sms_code = "%06d" % random.randint(0,999999)
-        send_sms_code.delay(mobile, sms_code)
-        print(sms_code)
-        redis_conn.setex("sms_code_%s" % mobile,60, sms_code)
-        return Response()
-
-
 class SmsPassword(APIView):
     # 验证短信验证码
     def get(self,request,username):
@@ -338,21 +322,16 @@ class SmsPassword(APIView):
         return Response(data=data)
 
 
-class NewPassword(APIView):
-    """修改新的密码"""
-    queryset = User.objects.all()
-    def post(self,request,pk):
-        redis_conn = get_redis_connection("verify_codes")
-        data = request.data
-        user = User.objects.get(id = pk)
-        access_token = redis_conn.get("access_token_%s" % user.mobile)
+class SmSCode(APIView):
+    # 发送短信验证码
+    def get(self,request):
+        data = request.query_params
+        access_token = data.get("access_token")
         user_id = check_save_user_access_token(access_token)
-        if user_id != user.id:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        serializer= NewPasswordSerializer(instance=user,data=data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-
+        redis_conn = get_redis_connection("verify_codes")
+        mobile = redis_conn.get("mobile_%s" % user_id).decode()
+        sms_code = "%06d" % random.randint(0,999999)
+        send_sms_code.delay(mobile, sms_code)
+        print(sms_code)
+        redis_conn.setex("sms_code_%s" % mobile,60, sms_code)
+        return Response()
