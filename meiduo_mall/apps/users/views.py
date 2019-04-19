@@ -10,7 +10,16 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_jwt.views import ObtainJSONWebToken
+#------------------------------------------------------------------------------
+from django.http import HttpResponse # 响应图形验证码
+import random # 生成随机的短信验证码
+import re# 正则识别手机号码跟用户名
 
+from celery_tasks.sms.tasks import send_sms_code #发送短信验证码
+from users.utils import generate_save_user_access_token,check_save_user_access_token#生成加密的access_token
+from users.serializers import NewPasswordSerializer# 验证新的密码
+from meiduo_mall.utils.captcha.captcha import captcha#发送图形验证码包
+#-----------------------------------------------------------------------------
 from carts.utils import merge_cart_cookie_to_redis
 from goods.models import SKU
 from goods.serializers import SKUSerializer
@@ -23,6 +32,7 @@ from users.serializers import CreateUserSerializer, UserDetailSerializer, UserAd
 from users.serializers import EmailSerializer
 
 
+
 class UserView(CreateAPIView):
     """
     用户注册
@@ -33,8 +43,8 @@ class UserView(CreateAPIView):
 
 class UsernameCountView(APIView):
     """用户名数量"""
-
     def get(self, request, username):
+
         count = User.objects.filter(username=username).count()
 
         data = {
@@ -47,8 +57,8 @@ class UsernameCountView(APIView):
 
 class MobileCountView(APIView):
     """手机号数量"""
-
     def get(self, request, mobile):
+
         count = User.objects.filter(mobile=mobile).count()
 
         data = {
@@ -191,7 +201,7 @@ class UserBrowsingHistoryView(CreateAPIView):
         user_id = request.user.id
 
         redis_conn = get_redis_connection("history")
-        history = redis_conn.lrange("history_%s" % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT - 1)
+        history = redis_conn.lrange("history_%s" % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT-1)
         skus = []
         # 为了保持查询出的顺序与用户的浏览历史保存顺序一致
         for sku_id in history:
@@ -206,7 +216,6 @@ class UserAuthorizeView(ObtainJSONWebToken):
     """
     用户认证
     """
-
     def post(self, request, *args, **kwargs):
         # 调用父类的方法，获取drf jwt扩展默认的认证用户处理结果
         response = super().post(request, *args, **kwargs)
@@ -244,3 +253,106 @@ class ResetPassword(APIView):
 
         # 响应
         return Response({'message': 'ok'}, status=status.HTTP_200_OK)
+
+
+class ImageCode(APIView):
+    """获取图片验证码"""
+    def get(self,request,image_code_id):
+        name,text,image = captcha.generate_captcha()
+        redis_conn = get_redis_connection("verify_codes")
+        try:
+            redis_conn.setex("image_code_%s" % image_code_id, 300 , text.lower())
+        except Exception:
+            return Response({"message":"图片验证码储存出错"})
+
+        return HttpResponse(image, content_type='img/png')
+
+
+class UserGetMobile(APIView):
+    # 发送短信验证界面显示手机号码
+    def get(self,request,username):
+        try:
+            if re.match(r"1[3-9]\d{9}", username):
+                user = User.objects.get(mobile = username)
+            else:
+                user = User.objects.get(username = username)
+        except Exception as e:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        data = request.query_params
+        image_code_id = data.get('image_code_id')
+        text = data.get("text")
+        redis_conn = get_redis_connection("verify_codes")
+        text_old = redis_conn.get("image_code_%s" % image_code_id)
+        if text.lower() != text_old.decode():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        access_token = generate_save_user_access_token(user.id)
+        rp = user.mobile[3:7]
+        mobile = user.mobile.replace(rp,"****")
+        data = {
+           'mobile':mobile,
+            "access_token": access_token
+        }
+        redis_conn.set("mobile_%s" % user.id, user.mobile)
+        redis_conn.set("access_token_%s" % user.mobile, access_token)
+        return Response(data=data)
+
+
+class SmSCode(APIView):
+    # 发送短信验证码
+    def get(self,request):
+        data = request.query_params
+        access_token = data.get("access_token")
+        user_id = check_save_user_access_token(access_token)
+        redis_conn = get_redis_connection("verify_codes")
+        mobile = redis_conn.get("mobile_%s" % user_id).decode()
+        sms_code = "%06d" % random.randint(0,999999)
+        send_sms_code.delay(mobile, sms_code)
+        print(sms_code)
+        redis_conn.setex("sms_code_%s" % mobile,60, sms_code)
+        return Response()
+
+
+class SmsPassword(APIView):
+    # 验证短信验证码
+    def get(self,request,username):
+        try:
+            if re.match(r"1[3-9]\d{9}", username):
+                user = User.objects.get(mobile = username)
+            else:
+                user = User.objects.get(username = username)
+        except Exception as e:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        data = request.query_params
+        sms_code = data.get("sms_code")
+        redis_conn = get_redis_connection("verify_codes")
+        access_token = redis_conn.get("access_token_%s" % user.mobile)
+        sms_code_old = redis_conn.get("sms_code_%s" % user.mobile).decode()
+        if sms_code != sms_code_old:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        data = {
+            "user_id":user.id,
+            "access_token":access_token,
+        }
+        return Response(data=data)
+
+
+class NewPassword(APIView):
+    """修改新的密码"""
+    queryset = User.objects.all()
+    def post(self,request,pk):
+        redis_conn = get_redis_connection("verify_codes")
+        data = request.data
+        user = User.objects.get(id = pk)
+        access_token = redis_conn.get("access_token_%s" % user.mobile)
+        user_id = check_save_user_access_token(access_token)
+        if user_id != user.id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        serializer= NewPasswordSerializer(instance=user,data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+

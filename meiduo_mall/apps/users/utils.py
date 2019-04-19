@@ -44,3 +44,19 @@ class UsernameMobileAuthBackend(ModelBackend):
                 return user
         else:
             return
+
+# ------------------------------------------- access_token 更改密码时候需要的验证
+from itsdangerous import TimedJSONWebSignatureSerializer as TJWSerializer
+from django.conf import settings
+
+
+def generate_save_user_access_token(user_id):
+    serializer = TJWSerializer(settings.SECRET_KEY, 600)
+    token = serializer.dumps({"user_id":user_id})
+    return token.decode()
+
+
+def check_save_user_access_token(access_token):
+    serializer = TJWSerializer(settings.SECRET_KEY,600)
+    data = serializer.loads(access_token)
+    return data.get("user_id")
