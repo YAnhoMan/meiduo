@@ -3,7 +3,7 @@ from celery import Celery
 # 指明celery可以读取的django配置文件
 import os
 if not os.getenv('DJANGO_SETTINGS_MODULE'):
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'meiduo_mall.settings.dev'
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'meiduo_mall.settings.prod'
 
 # 1.创建celery实例对象
 celery_app = Celery('meiduo')
