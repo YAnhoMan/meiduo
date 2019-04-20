@@ -37,14 +37,14 @@ class SMSCodeView(APIView):
 
         if image_code_id:
 
-            real_image_code = redis_conn.get("ImageCode_" + image_code_id)
+            real_image_code = redis_conn.get("image_code_%s" % image_code_id)
 
             if real_image_code:
                 # 如果能够取出来值，删除redis中缓存的内容
                 real_image_code = real_image_code.decode()
-                redis_conn.delete("ImageCode_" + image_code_id)
+                redis_conn.delete("image_code_%s" % image_code_id)
             else:
-                raise Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
             if image_code.lower() != real_image_code.lower():
                 # 验证码输入错误
@@ -56,6 +56,7 @@ class SMSCodeView(APIView):
 
         # 生成短信验证码
         sms_code = '%06d' % random.randint(0, 999999)
+        print(sms_code)
         logger.debug(sms_code)
 
         pl = redis_conn.pipeline()

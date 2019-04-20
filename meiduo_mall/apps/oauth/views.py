@@ -158,6 +158,8 @@ class SINAAuthUserView(GenericAPIView):
         # 获取前端传入的Code
         code = request.query_params.get('code')
 
+        next = request.query_params.get('next')
+
         if not code:
             return Response({'message': '缺少code'},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -165,8 +167,7 @@ class SINAAuthUserView(GenericAPIView):
         client = OAuthweibo(
             client_id=constants.APP_KEY,
             client_secret=constants.APP_SECRET,
-            redirect_uri=constants.CALLBACK_URL,
-            state=next)
+            redirect_uri=constants.CALLBACK_URL)
 
         try:
 

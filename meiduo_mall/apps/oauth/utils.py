@@ -33,6 +33,19 @@ def check_save_user_token(access_token):
     else:
         return data.get('openid')
 
+def check_save_weibo_token(access_token):
+
+    serializer = Serializer(SECRET_KEY, 300)
+
+    try:
+        data = serializer.loads(access_token)
+
+    except BadData:
+        return None
+
+    else:
+        return data.get('access_token')
+
 
 from django.conf import settings
 from urllib.parse import urlencode, parse_qs
@@ -79,7 +92,6 @@ class OAuthweibo(object):
         # 构建url
         access_url = 'https://api.weibo.com/oauth2/access_token'
 
-        data = None
         # 发送请求
         try:
             response = requests.post(access_url, data_dict)

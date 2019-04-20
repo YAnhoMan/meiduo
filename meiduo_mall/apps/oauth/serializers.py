@@ -2,7 +2,7 @@ from django_redis import get_redis_connection
 from rest_framework import serializers
 
 from .models import OAuthQQUser, OAuthSinaUser
-from .utils import check_save_user_token
+from .utils import check_save_user_token, check_save_weibo_token
 from users.models import User
 
 
@@ -85,9 +85,9 @@ class WeiboSerializer(serializers.Serializer):
 
     def validate(self, attrs):
 
-        access_token = attrs.get('access_token')
+        attrs['access_token'] = check_save_weibo_token(attrs.get('access_token'))
+
         mobile = attrs['mobile']
-        sms_code = attrs['sms_code']
 
         redis_conn = get_redis_connection('verify_codes')
         real_sms_code = redis_conn.get('sms_%s' % attrs['mobile'])
@@ -125,11 +125,8 @@ class WeiboSerializer(serializers.Serializer):
                 password=validated_data['password']
             )
 
-        print(len(validated_data['access_token']))
         OAuthSinaUser.objects.create(
             access_token=validated_data['access_token'],
             user=user)
-
-        self.context['view'].user = user
 
         return user

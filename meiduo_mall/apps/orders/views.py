@@ -67,7 +67,7 @@ class OrderView(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return OrderInfo.objects.filter(user=user).order_by('create_time')
+        return OrderInfo.objects.filter(user=user).order_by('-create_time')
 
 
 class OrderJudgeViewSet(ViewSet):
@@ -91,6 +91,9 @@ class OrderJudgeViewSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         object.is_commented = True
         serializer.save()
+        sku = object.sku
+        sku.comments += 1
+        sku.save()
 
         unjudge = OrderGoods.objects.filter(order=pk, is_commented=False).count()
         if unjudge == 0:
